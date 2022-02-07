@@ -1,0 +1,5 @@
+venv
+app
+scripts
+.idea
+checkpoints/resnet50.ptl
