@@ -1,4 +1,3 @@
-import kivy.core.camera
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
@@ -6,7 +5,12 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.utils import platform
 from kivy.core.window import Window
 
+from kivy.config import Config
+
 from camera_control import CameraControl
+
+Config.set('modules', 'monitor', '')
+Config.set('modules', 'showborder', '')
 
 if platform == 'android':
     from jnius import autoclass

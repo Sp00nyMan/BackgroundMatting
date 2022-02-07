@@ -15,7 +15,6 @@ from PIL import Image
 
 from encoder import Encoding
 
-
 class Model:
     MODELS_DIR = 'models'
 

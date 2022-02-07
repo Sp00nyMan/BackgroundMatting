@@ -2,7 +2,7 @@ FROM pytorch/torchserve:latest-gpu
 
 COPY torchserve /home/model-server/torchserve
 COPY model /home/model-server/model
-COPY checkpoints /home/model-server/checkpoints
+COPY torchserve/checkpoints /home/model-server/checkpoints
 
 ENV PYTHONPATH /home/model-server/model
 
