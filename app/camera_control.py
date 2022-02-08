@@ -13,7 +13,7 @@ from model_base import Model
 
 from permission_manager import PermissionsManager
 
-#TODO: Migrate to kivy.core.camera.Camera
+#TODO: Migrate to camera2
 class CameraControl(Preview):
     def __init__(self, **kwargs):
         super().__init__(orientation='portrait')
