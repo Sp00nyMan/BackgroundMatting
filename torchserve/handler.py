@@ -1,3 +1,6 @@
+import logging
+logger = logging.getLogger(__file__)
+logger.setLevel(logging.DEBUG)
 from base64 import b64encode
 from io import BytesIO
 from time import perf_counter
@@ -30,20 +33,25 @@ class Handler(VisionHandler):
         self.model = torch.jit.freeze(self.model).eval()
         self.bgr = torch.tensor([120, 255, 155],dtype=torch.float32 , device=self.device).div(255).view(1, 3, 1, 1)
         self.initialized = True
-        print(context.system_properties)
+        logger.info(context.system_properties)
 
     def preprocess(self, data):
-        image = super().preprocess(data)
+        data : bytes = data[0]['data']
+        logger.info(f"Received data of size {len(data)} B")
+        image : Image.Image= Image.open(BytesIO(data))
+        image = self.image_processing(image)
+        image = image.unsqueeze(0).to(self.device)
+        logger.info(f"Converted to an image of shape: {image.shape}")
         return image
 
     def postprocess(self, data):
         fgr, pha = data
         image = fgr * pha + self.bgr * (1 - pha)
 
-        image = ToPILImage()(image[0])
+        image: Image.Image = ToPILImage()(image[0])
 
         encoded = Handler.image_to_b64(image)
-        print(f"Payload: {len(encoded)} B")
+        logger.info(f"Sending data of size {len(encoded)} B")
 
         return [encoded]
 
@@ -57,13 +65,13 @@ class Handler(VisionHandler):
     def handle(self, data, context):
         start = perf_counter()
         image = self.preprocess(data)
-        print(f"Preprocessing: {perf_counter() - start:.4}")
+        logger.info(f"Preprocessing time: {perf_counter() - start:.4}")
 
         start = perf_counter()
         output = self.inference(image)
-        print(f"Inference: {perf_counter() - start:.4}")
+        logger.info(f"Inference time: {perf_counter() - start:.4}")
 
         start = perf_counter()
         result = self.postprocess(output)
-        print(f"Postprocessing: {perf_counter() - start:.4}\n\n\n")
+        logger.info(f"Postprocessing time: {perf_counter() - start:.4}")
         return result

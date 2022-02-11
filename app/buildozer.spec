@@ -13,7 +13,7 @@ package.domain = org.test
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas
+source.include_exts = py,kv,png
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
@@ -36,7 +36,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,camera4kivy,gestures4kivy,PIL,numpy,requests,urllib3,chardet,idna
+requirements = python3,kivy,numpy,PIL,requests,urllib3,chardet,idna
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -52,7 +52,7 @@ requirements = python3,kivy,camera4kivy,gestures4kivy,PIL,numpy,requests,urllib3
 #icon.filename = %(source.dir)s/data/icon.png
 
 # (str) Supported orientation (one of landscape, sensorLandscape, portrait or all)
-orientation = all
+orientation = landscape
 
 # (list) List of service to declare
 #services = NAME:ENTRYPOINT_TO_PY,NAME2:ENTRYPOINT2_TO_PY
@@ -135,7 +135,7 @@ android.api = 30
 
 # (list) List of Java files to add to the android project (can be java or a
 # directory containing the files)
-#android.add_src =
+android.add_src = camera2/java/
 
 # (list) Android AAR archives to add (currently works only with sdl2_gradle
 # bootstrap)
@@ -229,7 +229,7 @@ android.arch = arm64-v8a
 #p4a.local_recipes =
 
 # (str) Filename to the hook for p4a
-p4a.hook =camerax_provider/gradle_options.py
+#p4a.hook =
 
 # (str) Bootstrap to use for android builds
 # p4a.bootstrap = sdl2

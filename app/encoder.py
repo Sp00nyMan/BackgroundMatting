@@ -6,13 +6,13 @@ import numpy as np
 from PIL import Image
 
 
-class Encoding:
+class Encoding: #TODO Figure out why the shape is incorrect in the handler
     @staticmethod
-    def image_from_bytes(pixels: bytes, shape, fmt='RGBA') -> Image.Image:
-        array = np.frombuffer(pixels, 'uint8').reshape((shape[0], shape[1], 3 if fmt == 'RGB' else 4))
-        image = Image.fromarray(array, fmt)
-        if fmt == 'RGBA':
-            image = image.convert('RGB')
+    def image_from_bytes(pixels: bytes, shape) -> Image.Image:
+        w, h = max(shape), min(shape)
+        array = np.frombuffer(pixels, 'uint8').reshape((h, w, 4))
+        image = Image.fromarray(array, "RGBA")
+        image = image.convert('RGB')
         return image
 
     @staticmethod

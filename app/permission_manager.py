@@ -1,6 +1,14 @@
+from enum import Enum
+
 from kivy.utils import platform
 
 class PermissionsManager:
+    class RequestStates(Enum):
+        UNKNOWN = "UNKNOWN"
+        HAVE_PERMISSION = "HAVE_PERMISSION"
+        DO_NOT_HAVE_PERMISSION = "DO_NOT_HAVE_PERMISSION"
+        AWAITING_REQUEST_RESPONSE = "AWAITING_REQUEST_RESPONSE"
+
     @staticmethod
     def is_android():
         return platform == 'android'

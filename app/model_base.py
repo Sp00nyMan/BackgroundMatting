@@ -1,52 +1,70 @@
-import numpy as np
+import logging
+import time
+
+logger = logging.getLogger(__file__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
+
 import requests
 from time import perf_counter
-
-# from kivy.utils import platform
-# from jnius import autoclass
-#
-# if platform == 'android':
-#     Interpreter = autoclass('org.pytorch.LiteModuleLoader')
-#     Module = autoclass('org.pytorch.Module')
-#     Tensor = autoclass('org.pytorch.Tensor')
-#     IValue = autoclass('org.pytorch.IValue')
-#     ToTensor = None
-from PIL import Image
 
 from encoder import Encoding
 
 class Model:
     MODELS_DIR = 'models'
 
-    def __init__(self, mode='online', num_threads=None):
+    def __init__(self, mode='online'):
         assert mode in ['online', 'local']
-        self.num_threads = num_threads
         self.online = mode == 'online'
+        self.initialized = False
         if self.online:
             self.__initialize_online()
         else:
             self._initialize_local()
 
     #TODO: Find a service that provides fast enough GPU Inference
-    def __initialize_online(self):
+    def __initialize_online(self): #TODO Display error message if the server is offline
         #self.url = 'http://matting.northeurope.azurecontainer.io:8080/predictions/matting'
-        self.url = 'http://192.168.0.160:8080/predictions/matting'
+        self.url = 'http://192.168.0.160:8080/'
+        self.prediction_path = 'predictions/matting'
+        self.health_path = 'ping'
         self.headers = {'Content-Type':'application/json',
                         'charset':'utf-8'}
+
+        max_tries = 5
+        tries = 1
+        sleep_duration = 5
+        while tries < max_tries:
+            response = requests.get(url=self.url + self.health_path)
+            if not response.ok:
+                logger.error(f"An error occurred while connecting to the server: {response.reason}")
+                logger.info(f"Retrying in {sleep_duration} seconds [{tries}/{max_tries}]")
+                tries += 1
+                time.sleep(sleep_duration)
+            else:
+                logger.info("Successfully initialized online inference")
+                break
+        self.initialized = True
 
     def _process_online(self, pixels, shape):
         data = Encoding.json_from_bytes(pixels, shape)
 
         start = perf_counter()
-        response = requests.post(url=self.url, data=data, headers=self.headers)
-        print(f"Request: {perf_counter() - start:.4}")
-        print(f"Elapsed: {response.elapsed}")
+        response = requests.post(url=self.url + self.prediction_path, data=data, headers=self.headers)
+        r = response.elapsed.total_seconds()
+        logger.info(f"Request time:{r:.4}")
+        logger.info(f"Additionally elapsed {perf_counter() - start - r:.2} to receive the data")
 
         response.raise_for_status()
+        logger.info("Successfully received response from the server")
 
         data = response.json()
         data = data['predictions'][0]
-        data = Encoding.image_from_b64(data).tobytes()
+        data = Encoding.image_from_b64(data)
+        logger.info(f"Received image: {data}")
+        data = data.tobytes()
 
         return data
 
