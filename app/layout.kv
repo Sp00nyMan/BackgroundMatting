@@ -1,3 +1,4 @@
+#: import AppLayout layout
 <CameraControl>:
     canvas:
         Color:
@@ -8,7 +9,47 @@
             texture: self.texture
             tex_coords: self.tex_coords
 
-FloatLayout:
+<ColouredButton>:
+    background_normal: (0.2, 0.2, 0.2, 0.5)
+    background_down: (0.3, 0.3, 0.3, 1)
+    radius: dp(5)
+    color: (1, 1, 1, 1)
+    canvas.before:
+        Color:
+            rgba: self.background_normal if self.state == 'normal' else self.background_down
+        RoundedRectangle:
+            pos: self.x + self.padding, self.y + self.padding
+            size: self.width - 2 * self.padding, self.height - 2 * self.padding
+            radius: [(self.radius, self.radius)] * 4
+
+<AppLayout>:
     orientation: "vertical"
+    supported_resolutions: cdw.standard_resolutions.keys()
     CameraControl:
         id: cdw
+    BoxLayout:
+        id: buttons_dropdown
+        pos_hint: {}
+        size_hint: 1, None
+        height: dp(50)
+        pos: self.x, root.top - self.height + (1. - root._buttons_visible_fraction) * self.height
+        orientation: "horizontal"
+        canvas:
+            Color:
+                rgba: 0.4, 0.4, 0.4, 0.4
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        ColouredButton:
+            text: "C"
+            font_size: self.height / 2
+            on_release: root.change_camera()
+        ColouredButton:
+            id: button_resolution
+            text: "FHD"
+            font_size: self.height / 2
+            on_release: root.change_resolution()
+        Label:
+            id: fps
+            text: ""
+            font_size: self.height / 2

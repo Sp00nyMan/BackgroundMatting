@@ -1,4 +1,6 @@
 import logging
+from time import perf_counter
+
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler()
@@ -21,6 +23,10 @@ from camera2.camera2 import PyCameraInterface, PyCameraDevice
 from permission_manager import PermissionsManager
 
 class CameraControl(StencilView):
+    best_resolution = "hd"
+    standard_resolutions = {"hd": (1280, 720),
+                            "fhd":(1920, 1080),
+                            "4k": (3840, 2160)}
     preview = BooleanProperty(False)
     texture : Texture = ObjectProperty(None, allownone=True)
     resolution = ListProperty([1920, 1080])
@@ -47,13 +53,13 @@ class CameraControl(StencilView):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.start_time = perf_counter()
 
         #self._update_rect will be called if any of these properties change
         self.bind(pos=self._update_rect,
                   size=self._update_rect,
                   resolution=self._update_rect,
                   texture=self._update_rect)
-
         self.register_event_type('on_update')
 
         self.camera_interface = PyCameraInterface()
@@ -70,10 +76,20 @@ class CameraControl(StencilView):
         :param sender: Camera object that invoked the method
         :param texture: The most recent texture from the camera
         """
+        self.update_fps()
         self.dispatch('on_update', texture)
 
     def on_update(self, texture):
         pass
+
+    def update_fps(self):
+        now = perf_counter()
+        fps = 1/(now - self.start_time)
+        fps = f"FPS: {fps:.2}"
+        self.parent.root.ids.fps.text = fps
+        logger.info(fps)
+        self.start_time = now
+
 
     ### Camera initialization methods ###
     #####################################
@@ -95,9 +111,19 @@ class CameraControl(StencilView):
         """
         Alternate cameras
         """
-        self.ensure_closed()
         self.available_cameras = self.available_cameras[1:] + [self.available_cameras[0]]
         self.restart_camera()
+
+    def change_resolution(self, new_resolution: str):
+        """
+        Restart the camera with new resolution
+        :param new_resolution: must be in ("HD", "FHD", "4k")
+        """
+        new_resolution = new_resolution.lower()
+        assert new_resolution is self.standard_resolutions
+        self.best_resolution = new_resolution
+        self.restart_camera()
+
 
     def restart_camera(self):
         self.ensure_closed()
@@ -195,8 +221,8 @@ class CameraControl(StencilView):
 
         self._rect_size = [aspect_width, aspect_height]
 
-    @staticmethod
-    def get_best_resolution(window_size, resolutions, best=(1920, 1080)):#best=(3840, 2160)):
+    def get_best_resolution(self, window_size, resolutions, best=None):
+        best = self.standard_resolutions[self.best_resolution] if best is None else best
         logger.info(f"Assuming the best resolution is {best}")
         if best in resolutions:
             return best

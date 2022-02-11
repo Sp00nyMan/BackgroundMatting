@@ -17,6 +17,7 @@ Config.set('modules', 'showborder', '')
 
 from camera_control import CameraControl
 from model_base import Model
+from layout import AppLayout
 
 # TODO: Correct mirroring on front camera
 # TODO: Custom FPS tracker
@@ -24,7 +25,7 @@ from model_base import Model
 # TODO: 4K- and low-resolution modes
 
 class MattingApp(App):
-    preview = BooleanProperty(False)
+    preview = BooleanProperty(True)
     camera_control : CameraControl = ObjectProperty(None)
 
     model: Model = ObjectProperty()
@@ -32,15 +33,12 @@ class MattingApp(App):
     start_time = perf_counter()
 
     def build(self):
-        return Builder.load_file('layout.kv')
+        Builder.load_file('layout.kv')
+        return AppLayout()
 
     def update(self, sender, texture):
         if not self.model.initialized:
             return
-
-        now = perf_counter()
-        logger.info(f"Passed {now - self.start_time :.2}")
-        self.start_time = now
 
         pixels = self.model.process(texture.pixels, texture.size)
 
