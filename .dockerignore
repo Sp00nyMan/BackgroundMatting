@@ -2,4 +2,4 @@ venv
 app
 scripts
 .idea
-checkpoints/resnet50.ptl
+torchserve/checkpoints/resnet50.ptl

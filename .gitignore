@@ -1,4 +1,4 @@
 venv
 .idea
 torchserve/checkpoints
-app/__pycache__
+app/__pycache__/
