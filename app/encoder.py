@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 
 
-class Encoding: #TODO Figure out why the shape is incorrect in the handler
+class Encoding:
     @staticmethod
     def image_from_bytes(pixels: bytes, shape) -> Image.Image:
         w, h = max(shape), min(shape)

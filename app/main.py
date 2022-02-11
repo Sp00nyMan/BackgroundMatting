@@ -18,6 +18,11 @@ Config.set('modules', 'showborder', '')
 from camera_control import CameraControl
 from model_base import Model
 
+# TODO: Correct mirroring on front camera
+# TODO: Custom FPS tracker
+# TODO: Camera switching
+# TODO: 4K- and low-resolution modes
+
 class MattingApp(App):
     preview = BooleanProperty(False)
     camera_control : CameraControl = ObjectProperty(None)

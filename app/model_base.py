@@ -25,7 +25,7 @@ class Model:
             self._initialize_local()
 
     #TODO: Find a service that provides fast enough GPU Inference
-    def __initialize_online(self): #TODO Display error message if the server is offline
+    def __initialize_online(self):
         #self.url = 'http://matting.northeurope.azurecontainer.io:8080/predictions/matting'
         self.url = 'http://192.168.0.160:8080/'
         self.prediction_path = 'predictions/matting'
