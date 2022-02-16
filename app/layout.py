@@ -24,7 +24,7 @@ class AppLayout(FloatLayout):
         self.ids.cdw.change_camera()
 
     def change_resolution(self):
-        current_resolution = self.ids.button_resolution.text
+        current_resolution = self.ids.button_resolution.text.lower()
         resolution_id = self.supported_resolutions.index(current_resolution)
         if resolution_id + 1 < len(self.supported_resolutions):
             resolution_id += 1
@@ -33,5 +33,5 @@ class AppLayout(FloatLayout):
 
         new_resolution = self.supported_resolutions[resolution_id]
         if current_resolution != new_resolution:
-            self.ids.button_resolution.text = new_resolution
+            self.ids.button_resolution.text = new_resolution.upper()
             self.ids.cdw.change_resolution(new_resolution)

@@ -78,7 +78,6 @@ class Runnable(PythonJavaClass):
 
 
 class PyCameraDevice(EventDispatcher):
-    enable_preview = BooleanProperty(True)
     camera_id = StringProperty()
 
     output_texture : Texture = ObjectProperty(None, allownone=True)
@@ -160,11 +159,6 @@ class PyCameraDevice(EventDispatcher):
         else:
             raise ValueError("Camera id {} LENS_FACING is unknown value {}".format(self.camera_id, facing))
         logger.info(f"Finished initing camera {self.camera_id}")
-
-    def __str__(self):
-        return "<PyCameraDevice facing={}>".format(self.facing)
-    def __repr__(self):
-        return str(self)
 
     def open(self, callback=None):
         self._open_callback = callback
@@ -287,8 +281,7 @@ class PyCameraDevice(EventDispatcher):
 
         self.java_preview_surface_texture.updateTexImage()
         self.preview_fbo.ask_update()
-        if self.enable_preview:
-            self.preview_fbo.draw()
+        self.preview_fbo.draw()
         self.output_texture = self.preview_fbo.texture
         self.dispatch('on_frame', self.output_texture)
 

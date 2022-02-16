@@ -31,14 +31,13 @@ class CameraControl(StencilView):
     texture : Texture = ObjectProperty(None, allownone=True)
     resolution = ListProperty([1920, 1080])
 
-    tex_coords = ListProperty([0.0, 0.0,    #u      v  (u, v) - position, (w, h) - size
-                               1.0, 0.0,    #u + w  v
-                               1.0, 1.0,    #u + w  v + h
-                               0.0, 1.0])   #u      v + h
-    mirrored = BooleanProperty(False)
-
     _rect_pos = ListProperty([0, 0])
     _rect_size = ListProperty([1, 1])
+    _tex_coords = ListProperty([0.0, 0.0,   #u      v  (u, v) - position, (w, h) - size
+                                1.0, 0.0,   #u + w  v
+                                1.0, 1.0,   #u + w  v + h
+                                0.0, 1.0])  #u      v + h
+    mirrored = BooleanProperty(False)
 
     current_camera : PyCameraDevice = ObjectProperty(None, allownone=True)
     camera_texture : Texture = ObjectProperty(None, allownone=True)
@@ -52,8 +51,10 @@ class CameraControl(StencilView):
                  PermissionsManager.RequestStates.AWAITING_REQUEST_RESPONSE])
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super(CameraControl, self).__init__(**kwargs)
         self.start_time = perf_counter()
+        self.fps_list = []
+        self.FPS_FREQUENCY = 15 # Update fps counter every FPS_FREQUENCY frames
 
         #self._update_rect will be called if any of these properties change
         self.bind(pos=self._update_rect,
@@ -76,36 +77,26 @@ class CameraControl(StencilView):
         :param sender: Camera object that invoked the method
         :param texture: The most recent texture from the camera
         """
+        print(sender)
         self.update_fps()
         self.dispatch('on_update', texture)
 
     def on_update(self, texture):
         pass
 
+    def on_tex_coords(self, *args):
+        print("TEX_COORDS CHANGED")
+
     def update_fps(self):
         now = perf_counter()
         fps = 1/(now - self.start_time)
-        fps = f"FPS: {fps:.2}"
-        self.parent.root.ids.fps.text = fps
-        logger.info(fps)
+        self.fps_list.append(fps)
+        if len(self.fps_list) >= self.FPS_FREQUENCY:
+            fps = sum(self.fps_list) / len(self.fps_list)
+            self.fps_list.clear()
+            fps = f"FPS: {fps:.2f}"
+            self.parent.ids.fps.text = fps
         self.start_time = now
-
-
-    ### Camera initialization methods ###
-    #####################################
-
-    def _load_cameras(self):
-        """
-        Initialize the list of available cameras.
-        Cameras facing FRONT go to the beginning of the list as they have more priority
-        """
-        logger.info("Available cameras:")
-        for camera in self.camera_interface.cameras:
-            logger.info(f"Camera ID {camera.camera_id}, facing {camera.facing}, resolutions {camera.supported_resolutions}")
-            if camera.facing == "BACK":
-                self.available_cameras.append(camera)
-            else:
-                self.available_cameras.insert(0, camera)
 
     def change_camera(self):
         """
@@ -124,6 +115,22 @@ class CameraControl(StencilView):
         self.best_resolution = new_resolution
         self.restart_camera()
 
+
+    ### Camera initialization methods ###
+    #####################################
+
+    def _load_cameras(self):
+        """
+        Initialize the list of available cameras.
+        Cameras facing FRONT go to the beginning of the list as they have more priority
+        """
+        logger.info("Available cameras:")
+        for camera in self.camera_interface.cameras:
+            logger.info(f"Camera ID {camera.camera_id}, facing {camera.facing}, resolutions {camera.supported_resolutions}")
+            if camera.facing == "BACK":
+                self.available_cameras.append(camera)
+            else:
+                self.available_cameras.insert(0, camera)
 
     def restart_camera(self):
         self.ensure_closed()
@@ -168,10 +175,13 @@ class CameraControl(StencilView):
             logger.info(f"Camera event {action} is ignored")
 
     def _camera_preview_callback(self, camera: PyCameraDevice, *args):
+        rect = self.canvas.children[-2]
+        print(rect.tex_coords)
+        print(self._tex_coords)
         logger.info("Starting camera preview")
 
         self.mirrored = camera.facing == "FRONT"
-        self.mirror()
+        self._mirror()
 
         self.camera_texture = camera.start_preview(tuple(self.resolution))
         if self.preview:
@@ -179,6 +189,10 @@ class CameraControl(StencilView):
 
         camera.bind(on_frame=self.on_frame)
         self.current_camera = camera
+
+        rect = self.canvas.children[-2]
+        print(rect.tex_coords)
+        print(self._tex_coords)
 
     def ensure_closed(self):
         if self.current_camera is not None:
@@ -188,19 +202,19 @@ class CameraControl(StencilView):
 
     #### Correct texture display methods####
     ########################################
-    def mirror(self):
+    def _mirror(self):
         if self.mirrored:
             logger.info("Using front camera. Therefore, mirroring the texture")
             p = (1., 0.) # Position. shifted all over to the right side
             s = (-1., 1.) # Size. full size, flipped along width (mirrored)
         else:
             p = (0., 0.) # Position.
-            s = (1., 1.) # Size. full size, flipped along width (mirrored)
-        self.tex_coords = [p[0],        p[1],
-                           p[0] + s[0], p[1],
-                           p[0] + s[0], p[1] + s[1],
-                           p[0],        p[1] + s[1]]
-        print(self.tex_coords)
+            s = (1., 1.) # Size. full size
+        self._tex_coords = [p[0], p[1],
+                            p[0] + s[0], p[1],
+                            p[0] + s[0], p[1] + s[1],
+                            p[0], p[1] + s[1]]
+        #TODO ASSIGN THESE COORDINATES TO THE RECTANGLE
 
     def _update_rect(self, *args, fill=True):
         logger.info("Updating output rectangle")
@@ -220,6 +234,7 @@ class CameraControl(StencilView):
                           self.center_y - aspect_height / 2]
 
         self._rect_size = [aspect_width, aspect_height]
+
 
     def get_best_resolution(self, window_size, resolutions, best=None):
         best = self.standard_resolutions[self.best_resolution] if best is None else best

@@ -7,14 +7,14 @@
             pos: self._rect_pos
             size: self._rect_size
             texture: self.texture
-            tex_coords: self.tex_coords
+            tex_coords: self._tex_coords
 
 <ColouredButton>:
     background_normal: (0.2, 0.2, 0.2, 0.5)
     background_down: (0.3, 0.3, 0.3, 1)
     radius: dp(5)
     color: (1, 1, 1, 1)
-    canvas.before:
+    canvas:
         Color:
             rgba: self.background_normal if self.state == 'normal' else self.background_down
         RoundedRectangle:
@@ -32,7 +32,7 @@
         pos_hint: {}
         size_hint: 1, None
         height: dp(50)
-        pos: self.x, root.top - self.height + (1. - root._buttons_visible_fraction) * self.height
+        pos: root.x, root.top - self.height + (1. - root._buttons_visible_fraction) * self.height
         orientation: "horizontal"
         canvas:
             Color:
@@ -46,7 +46,7 @@
             on_release: root.change_camera()
         ColouredButton:
             id: button_resolution
-            text: "FHD"
+            text: cdw.best_resolution.upper()
             font_size: self.height / 2
             on_release: root.change_resolution()
         Label:

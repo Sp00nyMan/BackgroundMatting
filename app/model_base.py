@@ -37,15 +37,15 @@ class Model:
         tries = 1
         sleep_duration = 5
         while tries < max_tries:
-            response = requests.get(url=self.url + self.health_path)
-            if not response.ok:
-                logger.error(f"An error occurred while connecting to the server: {response.reason}")
+            try:
+                response = requests.get(url=self.url + self.health_path)
+                logger.info("Successfully initialized online inference")
+                break
+            except Exception as e:
+                logger.error(f"An error occurred while connecting to the server: {e}")
                 logger.info(f"Retrying in {sleep_duration} seconds [{tries}/{max_tries}]")
                 tries += 1
                 time.sleep(sleep_duration)
-            else:
-                logger.info("Successfully initialized online inference")
-                break
         self.initialized = True
 
     def _process_online(self, pixels, shape):

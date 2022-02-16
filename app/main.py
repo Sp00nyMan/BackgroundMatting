@@ -19,10 +19,11 @@ from camera_control import CameraControl
 from model_base import Model
 from layout import AppLayout
 
-# TODO: Correct mirroring on front camera
+# TODO: Correct mirroring
+
 # TODO: Custom FPS tracker
-# TODO: Camera switching
-# TODO: 4K- and low-resolution modes
+# TODO: Replace background
+# TODO: Async request processing to avoid freezing while waiting for response
 
 class MattingApp(App):
     preview = BooleanProperty(True)
@@ -34,7 +35,8 @@ class MattingApp(App):
 
     def build(self):
         Builder.load_file('layout.kv')
-        return AppLayout()
+        root = AppLayout()
+        return root
 
     def update(self, sender, texture):
         if not self.model.initialized:
@@ -53,7 +55,7 @@ class MattingApp(App):
         self.camera_control.preview = self.preview
         if not self.preview:
             self.camera_control.bind(on_update=self.update)
-        self.model = Model()
+            self.model = Model()
 
     def on_stop(self): #TODO Correct closing. Sometimes this method is not called
         self.camera_control.ensure_closed()
@@ -65,7 +67,7 @@ class MattingApp(App):
         self.camera_control.ensure_closed()
         return super().on_pause()
 
-    def on_resume(self): #TODO Wrong mirroring after resuming. Rectangle depends on root.tex_coords. Figure out what it is and why it doesn't change
+    def on_resume(self): #TODO Wrong mirroring after resuming. Rectangle depends on root._tex_coords. Figure out what it is and why it doesn't change
         logger.info("Restarting camera owing to resume")
         self.camera_control.restart_camera()
 
