@@ -19,8 +19,6 @@ from camera_control import CameraControl
 from model_base import Model
 from layout import AppLayout
 
-# TODO: Correct mirroring
-
 # TODO: Replace background
 # TODO: Async request processing to avoid freezing while waiting for response
 

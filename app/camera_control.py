@@ -33,6 +33,8 @@ class CameraControl(StencilView):
     texture : Texture = ObjectProperty(None, allownone=True)
     resolution = ListProperty([1920, 1080])
 
+
+    _display_rect : Rectangle = ObjectProperty(None, allownone=True)
     _rect_pos = ListProperty([0, 0])
     _rect_size = ListProperty([1, 1])
     _tex_coords = ListProperty([0.0, 0.0,   #u      v  (u, v) - position, (w, h) - size
@@ -62,7 +64,8 @@ class CameraControl(StencilView):
         self.bind(pos=self._update_rect,
                   size=self._update_rect,
                   resolution=self._update_rect,
-                  texture=self._update_rect)
+                  texture=self._update_rect,
+                  mirrored=self._update_rect)
         self.register_event_type('on_update')
 
         self.camera_interface = PyCameraInterface()
@@ -180,12 +183,12 @@ class CameraControl(StencilView):
     def _camera_preview_callback(self, camera: PyCameraDevice, *args):
         logger.info("Starting camera preview")
 
-        self.mirrored = camera.facing == "FRONT"
-        self._mirror()
 
         self.camera_texture = camera.start_preview(tuple(self.resolution))
         if self.preview:
             self.texture = self.camera_texture
+
+        self.mirrored = camera.facing == "FRONT"
 
         camera.bind(on_frame=self.on_frame)
         self.current_camera = camera
@@ -211,7 +214,12 @@ class CameraControl(StencilView):
                             p[0] + s[0], p[1] + s[1],
                             p[0], p[1] + s[1]]
         #TODO ASSIGN THESE COORDINATES TO THE RECTANGLE
-        self.canvas.children[-2].tex_coords = tuple([0] * 8)
+        if self._display_rect is None or self._display_rect.tex_coords != self._tex_coords:
+            self._display_rect = Rectangle(texture=self.texture, pos=self._rect_pos, size=self._rect_size, tex_coords=self._tex_coords)
+            if self._display_rect in self.canvas.children:
+                self.canvas.remove(self._display_rect)
+            self.canvas.add(self._display_rect)
+
 
     def _update_rect(self, *args, fill=True):
         logger.info("Updating output rectangle")
@@ -231,6 +239,7 @@ class CameraControl(StencilView):
                           self.center_y - aspect_height / 2]
 
         self._rect_size = [aspect_width, aspect_height]
+        self._mirror()
 
 
     def get_best_resolution(self, window_size, resolutions, best=None):
