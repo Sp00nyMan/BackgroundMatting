@@ -21,7 +21,6 @@ from layout import AppLayout
 
 # TODO: Correct mirroring
 
-# TODO: Custom FPS tracker
 # TODO: Replace background
 # TODO: Async request processing to avoid freezing while waiting for response
 

@@ -105,8 +105,11 @@ class PyCameraDevice(EventDispatcher):
 
     _open_callback = ObjectProperty(None, allownone=True)
 
+    clock_event = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.counter = 0
         self.register_event_type("on_opened")
         self.register_event_type("on_closed")
         self.register_event_type("on_disconnected")
@@ -135,6 +138,8 @@ class PyCameraDevice(EventDispatcher):
 
     def close(self):
         self.java_camera_device.close()
+        if self.clock_event is not None:
+            self.clock_event.cancel()
 
     def _populate_camera_characteristics(self):
         logger.info("Populating camera characteristics")
@@ -273,7 +278,7 @@ class PyCameraDevice(EventDispatcher):
         if event == "READY":
             logger.info("Doing READY actions")
             self.java_capture_session.setRepeatingRequest(self.java_capture_request.build(), None, None)
-            Clock.schedule_interval(self._update_preview, 0)
+            self.clock_event = Clock.schedule_interval(self._update_preview, 0) #Saving the event object so we can cancel it
 
     def _update_preview(self, dt):
         if not self.connected:

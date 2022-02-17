@@ -1,6 +1,8 @@
 import logging
 from time import perf_counter
 
+from kivy.graphics import Color, Rectangle
+
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler()
@@ -66,10 +68,13 @@ class CameraControl(StencilView):
         self.camera_interface = PyCameraInterface()
 
         # Update the layout as frequently as possible
-        Clock.schedule_interval(lambda dt: self.parent.canvas.ask_update(), 0)
+        Clock.schedule_interval(self.update, 0)
 
         self._load_cameras()
         self.restart_camera()
+
+    def update(self, *args):
+        self.parent.canvas.ask_update()
 
     def on_frame(self, sender: PyCameraDevice, texture: Texture):
         """
@@ -77,28 +82,26 @@ class CameraControl(StencilView):
         :param sender: Camera object that invoked the method
         :param texture: The most recent texture from the camera
         """
-        print(sender)
         self.update_fps()
         self.dispatch('on_update', texture)
 
     def on_update(self, texture):
         pass
 
-    def on_tex_coords(self, *args):
-        print("TEX_COORDS CHANGED")
-
     def update_fps(self):
         now = perf_counter()
         fps = 1/(now - self.start_time)
+        self.start_time = now
+
         self.fps_list.append(fps)
         if len(self.fps_list) >= self.FPS_FREQUENCY:
             fps = sum(self.fps_list) / len(self.fps_list)
             self.fps_list.clear()
             fps = f"FPS: {fps:.2f}"
             self.parent.ids.fps.text = fps
-        self.start_time = now
 
     def change_camera(self):
+        logger.info("Changing the camera")
         """
         Alternate cameras
         """
@@ -106,11 +109,11 @@ class CameraControl(StencilView):
         self.restart_camera()
 
     def change_resolution(self, new_resolution: str):
+        logger.info("Restarting the camera with the new resolution")
         """
         Restart the camera with new resolution
-        :param new_resolution: must be in ("HD", "FHD", "4k")
+        :param new_resolution: must be in ("hd", "fhd", "4k")
         """
-        new_resolution = new_resolution.lower()
         assert new_resolution is self.standard_resolutions
         self.best_resolution = new_resolution
         self.restart_camera()
@@ -175,9 +178,6 @@ class CameraControl(StencilView):
             logger.info(f"Camera event {action} is ignored")
 
     def _camera_preview_callback(self, camera: PyCameraDevice, *args):
-        rect = self.canvas.children[-2]
-        print(rect.tex_coords)
-        print(self._tex_coords)
         logger.info("Starting camera preview")
 
         self.mirrored = camera.facing == "FRONT"
@@ -189,10 +189,6 @@ class CameraControl(StencilView):
 
         camera.bind(on_frame=self.on_frame)
         self.current_camera = camera
-
-        rect = self.canvas.children[-2]
-        print(rect.tex_coords)
-        print(self._tex_coords)
 
     def ensure_closed(self):
         if self.current_camera is not None:
@@ -215,6 +211,7 @@ class CameraControl(StencilView):
                             p[0] + s[0], p[1] + s[1],
                             p[0], p[1] + s[1]]
         #TODO ASSIGN THESE COORDINATES TO THE RECTANGLE
+        self.canvas.children[-2].tex_coords = tuple([0] * 8)
 
     def _update_rect(self, *args, fill=True):
         logger.info("Updating output rectangle")

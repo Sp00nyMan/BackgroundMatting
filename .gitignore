@@ -2,3 +2,4 @@ venv
 .idea
 torchserve/checkpoints
 app/__pycache__/
+playground
