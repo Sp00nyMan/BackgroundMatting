@@ -39,9 +39,10 @@ class Handler(VisionHandler):
         data : bytes = data[0]['data']
         logger.info(f"Received data of size {len(data)} B")
         image : Image.Image= Image.open(BytesIO(data))
+        logger.info(f"Received image: {image}")
         image = self.image_processing(image)
         image = image.unsqueeze(0).to(self.device)
-        logger.info(f"Converted to an image of shape: {image.shape}")
+        logger.info(f"Converted to a tensor of shape: {image.shape}")
         return image
 
     def postprocess(self, data):
