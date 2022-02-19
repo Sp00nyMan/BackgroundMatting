@@ -19,17 +19,20 @@ from camera_control import CameraControl
 from model_base import Model
 from layout import AppLayout
 
-# TODO: OPENCV Colour format fix
+# CODE:
 # TODO: Optimize postprocessing time
-# TODO: Replace background
-# TODO: Async request processing to avoid freezing while waiting for response
+# TODO: OPENCV Colour format fix
 # TODO: Different Camera classes for PC and android
 
+# Functionality
+# TODO: Replace background. Load an image from gallery
+# TODO: Async request processing to avoid freezing while waiting for response
+
 class MattingApp(App):
-    preview = BooleanProperty(False)
+    preview = BooleanProperty(True)
     camera_control : CameraControl = ObjectProperty(None)
 
-    model: Model = ObjectProperty()
+    model: Model = ObjectProperty(None, allownone=True)
 
     start_time = perf_counter()
 
@@ -50,12 +53,25 @@ class MattingApp(App):
 
         self.camera_control.texture.blit_buffer(pixels)
 
-    def on_start(self):
-        self.camera_control = self.root.ids.cdw
+    def toggle_preview(self, toggle=True):
+        if toggle:
+            self.preview = not self.preview
+
         self.camera_control.preview = self.preview
-        if not self.preview:
+
+        if self.preview:
+            self.model = None
+            self.camera_control.unbind(on_update=self.update)
+        else:
             self.camera_control.bind(on_update=self.update)
             self.model = Model()
+
+        if toggle:
+            self.camera_control.restart_camera()
+
+    def on_start(self):
+        self.camera_control = self.root.ids.cdw
+        self.toggle_preview(False)
 
     def on_stop(self): #TODO Correct closing. Sometimes this method is not called
         self.camera_control.ensure_closed()

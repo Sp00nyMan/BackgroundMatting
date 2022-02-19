@@ -67,8 +67,6 @@ class Model:
         data = response.json()
         data = data['predictions'][0]
         data = Encoding.bytes_from_b64(data)
-        logger.info(f"Received image: {data}")
-
         logger.info(f"Postprocessing: {perf_counter() - start:.4}")
 
         return data

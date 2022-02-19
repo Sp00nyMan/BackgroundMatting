@@ -155,7 +155,7 @@ class CameraControl(StencilView):
             else:
                 self.available_cameras.insert(0, camera)
 
-    def restart_camera(self):
+    def restart_camera(self, *args):
         self.ensure_closed()
         Clock.schedule_once(self._restart_camera, 0)
 
@@ -227,6 +227,8 @@ class CameraControl(StencilView):
         if self.current_camera is not None:
             if is_android:
                 self.current_camera.close()
+            else:
+                self.current_camera.on_play(self, False)
             self.current_camera = None
 
 

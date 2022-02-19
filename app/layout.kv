@@ -8,6 +8,7 @@
     background_normal: (0.2, 0.2, 0.2, 0.5)
     background_down: (0.3, 0.3, 0.3, 1)
     radius: dp(5)
+    font_size: self.height / 2
     color: (1, 1, 1, 1)
     canvas:
         Color:
@@ -36,15 +37,15 @@
                 pos: self.pos
                 size: self.size
         ColouredButton:
+            text: "P"
+            on_release: app.toggle_preview()
+        ColouredButton:
             text: "C"
-            font_size: self.height / 2
             on_release: root.change_camera()
         ColouredButton:
             id: button_resolution
             text: cdw.best_resolution.upper()
-            font_size: self.height / 2
             on_release: root.change_resolution()
         Label:
             id: fps
             text: ""
-            font_size: self.height / 2
