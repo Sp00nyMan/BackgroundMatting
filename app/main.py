@@ -19,11 +19,14 @@ from camera_control import CameraControl
 from model_base import Model
 from layout import AppLayout
 
+# TODO: OPENCV Colour format fix
+# TODO: Optimize postprocessing time
 # TODO: Replace background
 # TODO: Async request processing to avoid freezing while waiting for response
+# TODO: Different Camera classes for PC and android
 
 class MattingApp(App):
-    preview = BooleanProperty(True)
+    preview = BooleanProperty(False)
     camera_control : CameraControl = ObjectProperty(None)
 
     model: Model = ObjectProperty()
@@ -64,7 +67,7 @@ class MattingApp(App):
         self.camera_control.ensure_closed()
         return super().on_pause()
 
-    def on_resume(self): #TODO Wrong mirroring after resuming. Rectangle depends on root._tex_coords. Figure out what it is and why it doesn't change
+    def on_resume(self):
         logger.info("Restarting camera owing to resume")
         self.camera_control.restart_camera()
 

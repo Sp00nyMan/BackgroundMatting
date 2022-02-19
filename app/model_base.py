@@ -1,5 +1,4 @@
 import logging
-import time
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
@@ -8,7 +7,7 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 import requests
-from time import perf_counter
+from time import perf_counter, sleep
 
 from encoder import Encoding
 
@@ -39,17 +38,20 @@ class Model:
         while tries < max_tries:
             try:
                 response = requests.get(url=self.url + self.health_path)
+                response.raise_for_status()
                 logger.info("Successfully initialized online inference")
                 break
             except Exception as e:
                 logger.error(f"An error occurred while connecting to the server: {e}")
                 logger.info(f"Retrying in {sleep_duration} seconds [{tries}/{max_tries}]")
                 tries += 1
-                time.sleep(sleep_duration)
+                sleep(sleep_duration)
         self.initialized = True
 
     def _process_online(self, pixels, shape):
+        start = perf_counter()
         data = Encoding.json_from_bytes(pixels, shape)
+        logger.info(f"Preprocessing: {perf_counter() - start:.4}")
 
         start = perf_counter()
         response = requests.post(url=self.url + self.prediction_path, data=data, headers=self.headers)
@@ -60,11 +62,14 @@ class Model:
         response.raise_for_status()
         logger.info("Successfully received response from the server")
 
+        start = perf_counter()
+
         data = response.json()
         data = data['predictions'][0]
-        data = Encoding.image_from_b64(data)
+        data = Encoding.bytes_from_b64(data)
         logger.info(f"Received image: {data}")
-        data = data.tobytes()
+
+        logger.info(f"Postprocessing: {perf_counter() - start:.4}")
 
         return data
 

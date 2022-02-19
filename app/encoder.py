@@ -35,6 +35,12 @@ class Encoding:
         data = Image.open(BytesIO(decoded))
         return data
 
+    @staticmethod
+    def bytes_from_b64(data: str) -> bytes:
+        image = Encoding.image_from_b64(data)
+        bytes = image.tobytes()
+        return bytes
+
 
     @staticmethod
     def image_to_b64(image: Image.Image):
