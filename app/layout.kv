@@ -1,4 +1,4 @@
-#: import AppLayout layout
+#:import is_android camera
 <CameraControl>:
     canvas:
         Color:
@@ -40,6 +40,7 @@
             text: "P"
             on_release: app.toggle_preview()
         ColouredButton:
+            id: button_change
             text: "C"
             on_release: root.change_camera()
         ColouredButton:

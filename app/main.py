@@ -1,16 +1,9 @@
-from time import perf_counter
-import logging
-logger = logging.getLogger(__file__)
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler()
-handler.setLevel(logging.DEBUG)
-logger.addHandler(handler)
+from logging_utils import get_logger
+logger = get_logger(__name__)
 
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty, BooleanProperty
-from kivy.graphics.texture import Texture
-
 from kivy.config import Config
 Config.set('modules', 'monitor', '')
 Config.set('modules', 'showborder', '')
@@ -20,9 +13,8 @@ from model_base import Model
 from layout import AppLayout
 
 # CODE:
-# TODO: PC Texture output
+# TODO: PC Texture output on Inference
 # TODO: Optimize postprocessing time
-# TODO: Different Camera classes for PC and android
 
 # Functionality
 # TODO: Replace background. Load an image from gallery
@@ -33,8 +25,6 @@ class MattingApp(App):
     camera_control : CameraControl = ObjectProperty(None)
 
     model: Model = ObjectProperty(None, allownone=True)
-
-    start_time = perf_counter()
 
     def build(self):
         Builder.load_file('layout.kv')
@@ -55,7 +45,7 @@ class MattingApp(App):
 
         self.camera_control.preview = self.preview
         if toggle:
-            self.camera_control.restart_camera()
+            self.camera_control.initialize_camera()
 
         if self.preview:
             self.model = None
@@ -69,18 +59,18 @@ class MattingApp(App):
         self.toggle_preview(False)
 
     def on_stop(self): #TODO Correct closing. Sometimes this method is not called
-        self.camera_control.ensure_closed()
+        self.camera_control.close()
         logger.info("Application closed successfully!")
         return super().on_stop()
 
     def on_pause(self):
         logger.info("Closing camera because of pause")
-        self.camera_control.ensure_closed()
+        self.camera_control.close()
         return super().on_pause()
 
     def on_resume(self):
         logger.info("Restarting camera owing to resume")
-        self.camera_control.restart_camera()
+        self.camera_control.initialize_camera()
 
 if __name__ == '__main__':
     MattingApp().run()

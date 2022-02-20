@@ -6,7 +6,6 @@ from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 
-
 class ColouredButton(ButtonBehavior, Label):
     background_normal = ListProperty([1, 1, 1, 1])
     background_down = ListProperty([0.5, 0.5, 0.5, 1])
@@ -19,6 +18,11 @@ class AppLayout(FloatLayout):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        from kivy.utils import platform
+        if platform != 'android':
+            self.ids.buttons_dropdown.remove_widget(self.ids.button_resolution)
+            self.ids.buttons_dropdown.remove_widget(self.ids.button_change)
 
     def change_camera(self):
         self.ids.cdw.change_camera()

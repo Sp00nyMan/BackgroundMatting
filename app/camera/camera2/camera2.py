@@ -8,7 +8,7 @@ from kivy.clock import Clock
 
 from jnius import autoclass, cast, PythonJavaClass, java_method, JavaClass, MetaJavaClass, JavaMethod
 
-import logging
+import logging_utils
 from enum import Enum
 
 logger = logging.getLogger(__file__)
@@ -140,6 +140,7 @@ class PyCameraDevice(EventDispatcher):
         self.java_camera_device.close()
         if self.clock_event is not None:
             self.clock_event.cancel()
+            self.clock_event = None
 
     def _populate_camera_characteristics(self):
         logger.info("Populating camera characteristics")
@@ -216,7 +217,7 @@ class PyCameraDevice(EventDispatcher):
 
         logger.info("Creating capture stream with resolution {}".format(resolution))
 
-        self.preview_resolution = resolution
+        self.preview_resolution = tuple(resolution)
         self._prepare_preview_fbo(resolution)
         self.preview_texture = Texture(
             width=resolution[0], height=resolution[1], target=GL_TEXTURE_EXTERNAL_OES, colorfmt="rgba")
@@ -256,7 +257,7 @@ class PyCameraDevice(EventDispatcher):
             varying vec4 frag_color;
             varying vec2 tex_coord0;
 
-            /* uniform texture samplers */
+            /* uniform _texture samplers */
             uniform sampler2D texture0;
             uniform samplerExternalOES texture1;
             uniform vec2 resolution;

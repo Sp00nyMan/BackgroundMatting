@@ -1,10 +1,5 @@
-import logging
-
-logger = logging.getLogger(__file__)
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler()
-handler.setLevel(logging.DEBUG)
-logger.addHandler(handler)
+from logging_utils import get_logger
+logger = get_logger(__name__)
 
 import requests
 from time import perf_counter, sleep
@@ -32,12 +27,13 @@ class Model:
         self.headers = {'Content-Type':'application/json',
                         'charset':'utf-8'}
 
+        logger.info("Checking servers availability...")
         max_tries = 5
         tries = 1
         sleep_duration = 5
         while tries < max_tries:
             try:
-                response = requests.get(url=self.url + self.health_path)
+                response = requests.get(url=self.url + self.health_path, timeout=5)
                 response.raise_for_status()
                 logger.info("Successfully initialized online inference")
                 break
