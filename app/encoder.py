@@ -10,8 +10,8 @@ class Encoding:
     @staticmethod
     def _image_from_bytes(pixels: bytes, shape) -> Image.Image:
         w, h = max(shape), min(shape)
-        array = np.frombuffer(pixels, 'uint8').reshape((h, w, 4))
-        image = Image.fromarray(array, "RGBA")
+        rgba = np.frombuffer(pixels, 'uint8').reshape((h, w, 4))
+        image = Image.fromarray(rgba, "RGBA")
         image = image.convert('RGB')
         return image
 

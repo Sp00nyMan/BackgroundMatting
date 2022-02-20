@@ -24,6 +24,8 @@ from kivy.uix.stencilview import StencilView
 
 if is_android:
     from camera2.camera2 import PyCameraInterface, PyCameraDevice
+else:
+    from kivy.uix.camera import Camera
 
 from permission_manager import PermissionsManager
 
@@ -84,6 +86,13 @@ class CameraControl(StencilView):
         self.parent.canvas.ask_update()
         if not is_android and self.camera_texture is not None:
             self.camera_texture.ask_update(self.on_frame)
+
+    def display(self, pixels, shape, format="RGB"):
+        if self.texture is None or self.texture.size != shape or self.texture.colorfmt != format:
+            self.texture = Texture.create(size=shape, colorfmt=format)
+            logger.info(f"Output texture of size {self.texture.size} created")
+
+        self.texture.blit_buffer(pixels)
 
     def on_frame(self, *args):
         """
@@ -157,7 +166,7 @@ class CameraControl(StencilView):
 
     def restart_camera(self, *args):
         self.ensure_closed()
-        Clock.schedule_once(self._restart_camera, 0)
+        self._restart_camera(0)
 
     def _restart_camera(self, dt):
         logger.info(f"Restarting the camera. State {self.permission_state}")
@@ -192,7 +201,6 @@ class CameraControl(StencilView):
         if is_android:
             camera.open(self._camera_callback)
         else:
-            from kivy.uix.camera import Camera
             camera = Camera(index=1, resolution=self.resolution)
             self._camera_callback(camera, "OPENED")
 
@@ -217,11 +225,9 @@ class CameraControl(StencilView):
             self.camera_texture = camera.texture
             camera.bind(on_texture=self.on_frame)
 
-        if self.preview:
-            self.texture = self.camera_texture
+        self.texture = self.camera_texture if self.preview else None
 
         self.current_camera = camera
-        self.current_camera.bind(on_texture=self.on_frame)
 
     def ensure_closed(self):
         if self.current_camera is not None:

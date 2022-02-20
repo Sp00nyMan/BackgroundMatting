@@ -20,8 +20,8 @@ from model_base import Model
 from layout import AppLayout
 
 # CODE:
+# TODO: PC Texture output
 # TODO: Optimize postprocessing time
-# TODO: OPENCV Colour format fix
 # TODO: Different Camera classes for PC and android
 
 # Functionality
@@ -42,22 +42,20 @@ class MattingApp(App):
         return root
 
     def update(self, sender, texture):
-        if not self.model.initialized:
+        if self.model is None or not self.model.initialized:
             return
 
         pixels = self.model.process(texture.pixels, texture.size)
 
-        if self.camera_control.texture is None or self.camera_control.texture.size != texture.size or self.camera_control.texture.colorfmt != 'RGB':
-            self.camera_control.texture = Texture.create(size=texture.size, bufferfmt=texture.bufferfmt, colorfmt='RGB')
-            logger.info(f"Output texture of size {self.camera_control.texture.size} created")
-
-        self.camera_control.texture.blit_buffer(pixels)
+        self.camera_control.display(pixels, texture.size)
 
     def toggle_preview(self, toggle=True):
         if toggle:
             self.preview = not self.preview
 
         self.camera_control.preview = self.preview
+        if toggle:
+            self.camera_control.restart_camera()
 
         if self.preview:
             self.model = None
@@ -65,9 +63,6 @@ class MattingApp(App):
         else:
             self.camera_control.bind(on_update=self.update)
             self.model = Model()
-
-        if toggle:
-            self.camera_control.restart_camera()
 
     def on_start(self):
         self.camera_control = self.root.ids.cdw
