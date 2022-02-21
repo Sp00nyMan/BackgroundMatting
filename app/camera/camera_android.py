@@ -6,10 +6,9 @@ from typing import List, Tuple
 import numpy as np
 
 from kivy.properties import ListProperty, OptionProperty
+from kivy.clock import mainthread
 
-from camera import Camera
-from camera2.camera2 import PyCameraDevice, PyCameraInterface
-from permission_manager import PermissionsManager
+from camera import Camera, PyCameraDevice, PyCameraInterface, PermissionsManager
 
 class CameraAndroid(Camera):
     _camera : PyCameraDevice
@@ -43,11 +42,13 @@ class CameraAndroid(Camera):
 
     def close(self):
         if self._camera is not None:
+            self._camera.unbind(on_frame=self.update)
             self._camera.close()
             self._camera = None
-        logger.info("Camera has been closed")
+            logger.info("Camera closed")
 
     def restart(self, *args):
+        self.close()
         logger.info(f"Restarting the camera. State {self._permission_state}")
 
         permitted_states = [PermissionsManager.RequestStates.UNKNOWN,
@@ -59,7 +60,6 @@ class CameraAndroid(Camera):
         self._camera = self._available_cameras[0]
         if PermissionsManager.check_request_permissions(partial(self._permissions_callback, self._camera)):
             self._start_camera()
-
 
     def _permissions_callback(self, camera, requested_permissions, allowed_permissions):
         if not np.all(allowed_permissions):
@@ -75,7 +75,8 @@ class CameraAndroid(Camera):
         self.set_best_available_resolution()
         self._camera.open(self._camera_opened)
 
-    def _camera_opened(self, camera:PyCameraDevice, action:str):
+    @mainthread
+    def _camera_opened(self, camera, action:str):
         if action != "OPENED":
             logger.info(f"Camera event {action} is ignored")
             return
@@ -101,6 +102,7 @@ class CameraAndroid(Camera):
         self.restart()
 
     def change_resolution(self, new_resolution:Tuple[int, int]):
-        logger.info("Restarting the camera with the new resolution")
+        logger.info(f"Restarting the camera with the new resolution {new_resolution}")
         assert new_resolution in self.supported_resolutions
+        self.preferred_resolution = new_resolution
         self.restart()

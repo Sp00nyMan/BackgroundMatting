@@ -135,7 +135,7 @@ android.api = 30
 
 # (list) List of Java files to add to the android project (can be java or a
 # directory containing the files)
-android.add_src = camera2/java/
+android.add_src = camera/camera2/java/
 
 # (list) Android AAR archives to add (currently works only with sdl2_gradle
 # bootstrap)

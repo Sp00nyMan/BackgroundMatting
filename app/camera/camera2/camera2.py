@@ -1,21 +1,15 @@
+from logging_utils import get_logger
+logger = get_logger(__name__)
 from typing import List
+from enum import Enum
 
 from kivy.event import EventDispatcher
 from kivy.graphics.texture import Texture
-from kivy.graphics import Fbo, Callback, Rectangle
+from kivy.graphics import Fbo, Rectangle
 from kivy.properties import (BooleanProperty, StringProperty, ObjectProperty, OptionProperty, ListProperty)
 from kivy.clock import Clock
 
 from jnius import autoclass, cast, PythonJavaClass, java_method, JavaClass, MetaJavaClass, JavaMethod
-
-import logging_utils
-from enum import Enum
-
-logger = logging.getLogger(__file__)
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler()
-handler.setLevel(logging.DEBUG)
-logger.addHandler(handler)
 
 CameraManager = autoclass("android.hardware.camera2.CameraManager")
 PythonActivity = autoclass("org.kivy.android.PythonActivity")
@@ -132,7 +126,7 @@ class PyCameraDevice(EventDispatcher):
     def on_disconnected(self, instance):
         pass
     def on_error(self, instance, error):
-        pass
+        raise RuntimeError(f"{instance} raised an error: {error}")
     def on_frame(self, texture):
         pass
 
@@ -206,7 +200,7 @@ class PyCameraDevice(EventDispatcher):
     def start_preview(self, resolution):
         if self.java_camera_device is None:
             raise ValueError("Camera device not yet opened, cannot create preview stream")
-
+        resolution = tuple(resolution)
         if resolution not in self.supported_resolutions:
             raise ValueError(
                 "Tried to open preview with resolution {}, not in supported resolutions {}".format(
@@ -217,7 +211,7 @@ class PyCameraDevice(EventDispatcher):
 
         logger.info("Creating capture stream with resolution {}".format(resolution))
 
-        self.preview_resolution = tuple(resolution)
+        self.preview_resolution = resolution
         self._prepare_preview_fbo(resolution)
         self.preview_texture = Texture(
             width=resolution[0], height=resolution[1], target=GL_TEXTURE_EXTERNAL_OES, colorfmt="rgba")

@@ -1,3 +1,5 @@
+import math
+
 from logging_utils import get_logger
 logger = get_logger(__name__)
 
@@ -18,7 +20,7 @@ class Camera(EventDispatcher):
                                          0., 0.])   #u      v + h
     resolution = ListProperty([1920, 1080])
     supported_resolutions = ListProperty([(1920, 1080)])
-    best_resolution = ListProperty([1920, 1080])
+    preferred_resolution : tuple = ListProperty([1920, 1080])
 
     _camera = ObjectProperty(None, allownone=True)
 
@@ -95,22 +97,20 @@ class Camera(EventDispatcher):
         pass
 
     def set_best_available_resolution(self, window_size=Window.size) -> None:
-        logger.info(f"Assuming the best resolution is {self.best_resolution}")
+        preferred_resolution = tuple(self.preferred_resolution)
+        logger.info(f"Assuming the best resolution is {preferred_resolution}")
         assert self.supported_resolutions, "List of supported resolutions is empty"
 
-        if self.best_resolution in self.supported_resolutions:
-            self.resolution = self.best_resolution
+        if preferred_resolution in self.supported_resolutions:
+            logger.info(f"Resolution {preferred_resolution} is supported, so setting it")
+            self.resolution = preferred_resolution
             return
-
-        win_x, win_y = window_size
-        larger_resolutions = [(x, y) for (x, y) in self.supported_resolutions if (x > win_x and y > win_y)]
-
-        if larger_resolutions:
-            self.resolution = min(larger_resolutions, key=lambda r: r[0] * r[1])
-            return
-
-        smaller_resolutions = self.supported_resolutions  # if we didn't find one yet, all are smaller than the requested Window size
-        self.resolution = max(smaller_resolutions, key=lambda r: r[0] * r[1])
+        logger.warning(f"Resolution {preferred_resolution} is unsupported. Looking for the best resolution close to the preferred")
+        b = preferred_resolution
+        a = b[0] / b[1] # best aspect ratio
+        ordered = sorted(self.supported_resolutions, key=lambda r: math.dist(b, r) * abs(a - (r[0]/r[1])))
+        logger.debug(f"Supported resolutions ordered by similarity to {preferred_resolution}: {ordered}")
+        self.resolution = ordered[0]
 
     def set_suggested_tex_coords(self, p, s):
         """

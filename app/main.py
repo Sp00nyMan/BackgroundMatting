@@ -1,3 +1,5 @@
+import requests
+
 from logging_utils import get_logger
 logger = get_logger(__name__)
 
@@ -9,11 +11,11 @@ Config.set('modules', 'monitor', '')
 Config.set('modules', 'showborder', '')
 
 from camera_control import CameraControl
-from model_base import Model
+from model import Model
 from layout import AppLayout
 
 # CODE:
-# TODO: PC Texture output on Inference
+# TODO: Texture output on Inference. The problem might be due to different values for resolution in camera and camera_control
 # TODO: Optimize postprocessing time
 
 # Functionality
@@ -41,18 +43,25 @@ class MattingApp(App):
 
     def toggle_preview(self, toggle=True):
         if toggle:
-            self.preview = not self.preview
+            preview = not self.preview
+        else:
+            preview = self.preview
 
+        if not preview:
+            try:
+                self.model = Model()
+            except requests.HTTPError as error:
+                logger.exception("Server cannot be reached...")
+                return
+            self.camera_control.bind(on_update=self.update)
+        else:
+            self.model = None
+            self.camera_control.unbind(on_update=self.update)
+
+        self.preview = preview
         self.camera_control.preview = self.preview
         if toggle:
             self.camera_control.initialize_camera()
-
-        if self.preview:
-            self.model = None
-            self.camera_control.unbind(on_update=self.update)
-        else:
-            self.camera_control.bind(on_update=self.update)
-            self.model = Model()
 
     def on_start(self):
         self.camera_control = self.root.ids.cdw

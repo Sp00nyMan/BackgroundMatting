@@ -29,19 +29,19 @@ class Model:
 
         logger.info("Checking servers availability...")
         max_tries = 5
-        tries = 1
         sleep_duration = 5
-        while tries < max_tries:
+        for tries in range(max_tries):
             try:
-                response = requests.get(url=self.url + self.health_path, timeout=5)
+                response = requests.get(url=self.url + self.health_path, timeout=1)
                 response.raise_for_status()
                 logger.info("Successfully initialized online inference")
                 break
             except Exception as e:
                 logger.error(f"An error occurred while connecting to the server: {e}")
-                logger.info(f"Retrying in {sleep_duration} seconds [{tries}/{max_tries}]")
-                tries += 1
+                logger.info(f"Retrying in {sleep_duration} seconds [{tries + 1}/{max_tries}]")
                 sleep(sleep_duration)
+        else:
+            raise requests.HTTPError("Server unavailable")
         self.initialized = True
 
     def _process_online(self, pixels, shape):

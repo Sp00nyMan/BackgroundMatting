@@ -20,7 +20,6 @@
 
 <AppLayout>:
     orientation: "vertical"
-    supported_resolutions: cdw.standard_resolutions.keys()
     CameraControl:
         id: cdw
     BoxLayout:
@@ -45,8 +44,9 @@
             on_release: root.change_camera()
         ColouredButton:
             id: button_resolution
-            text: cdw.best_resolution.upper()
+            text: root.starting_resolution.upper()
             on_release: root.change_resolution()
         Label:
             id: fps
+            font_size: self.height / 2
             text: ""

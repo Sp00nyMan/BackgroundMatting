@@ -10,14 +10,10 @@ from kivy.properties import ObjectProperty, ListProperty, BooleanProperty
 from kivy.uix.stencilview import StencilView
 
 class CameraControl(StencilView):
-    best_resolution = "hd"
-    standard_resolutions = {"hd": (1280, 720),
-                            "fhd":(1920, 1080),
-                            "4k": (3840, 2160)}
-
     preview = BooleanProperty(False)
     _texture : Texture = ObjectProperty(None, allownone=True)
     resolution = ListProperty([1920, 1080])
+    preferred_resolution = ListProperty([1280, 720])
 
 
     _display_rect : Rectangle = ObjectProperty(None, allownone=True)
@@ -30,6 +26,9 @@ class CameraControl(StencilView):
 
     camera : Camera = ObjectProperty(None, allownone=True)
 
+    ### Camera initialization methods ###
+    #####################################
+
     def __init__(self, **kwargs):
         super(CameraControl, self).__init__(**kwargs)
 
@@ -39,9 +38,36 @@ class CameraControl(StencilView):
                   resolution=self._update_rect,
                   _texture=self._update_rect)
         self.register_event_type('on_update')
+        self.update_event = None
         self.initialize_camera()
 
+    def initialize_camera(self, *args):
+        self.close()
+        self.camera = DeviceCamera()
+
+        self.camera.preferred_resolution = self.preferred_resolution
+
+        self.camera.bind(on_started=self._start_camera)
+        self.camera.restart()
+
+    def _start_camera(self, *args):
+        self.camera.bind(on_update=self.on_frame)
+        self.camera.bind(on_fps=self.update_fps)
+
+        self._tex_coords = self.camera.suggested_tex_coords
+        self._texture = self.camera.texture
+        self.resolution = self.camera.resolution
         self.update_event = Clock.schedule_interval(self.update, 0)
+
+    def close(self):
+        if self.update_event is not None:
+            self.update_event.cancel()
+        if self.camera is not None:
+            self.camera.close()
+            self.camera = None
+
+    #### Main functionality ####
+    ############################
 
     def update(self, *args):
         self.parent.canvas.ask_update()
@@ -55,31 +81,11 @@ class CameraControl(StencilView):
     def update_fps(self, sender, new_value:float, *args):
         self.parent.ids.fps.text = f"FPS: {new_value:.2f}"
 
-    ### Camera initialization methods ###
-    #####################################
+    def change_camera(self):
+        self.camera.change_camera()
 
-    def initialize_camera(self, *args):
-        self.camera = DeviceCamera()
-
-        self.camera.best_resolution = self.standard_resolutions[self.best_resolution]
-
-        self.camera.bind(on_update=self.on_frame)
-        self.camera.bind(on_fps=self.update_fps)
-        self.camera.bind(on_started=self._start_camera)
-
-        self.camera.restart()
-
-    def _start_camera(self, *args):
-        self._tex_coords = self.camera.suggested_tex_coords
-        self._texture = self.camera.texture
-        self.resolution = self.camera.resolution
-
-    def close(self):
-        if self.update_event is not None:
-            self.update_event.cancel()
-        if self.camera is not None:
-            self.camera.close()
-            self.camera = None
+    def change_resolution(self, new_resolution):
+        self.camera.change_resolution(new_resolution)
 
 
     #### Correct texture display methods####
