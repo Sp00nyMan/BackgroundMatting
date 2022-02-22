@@ -3,3 +3,5 @@ venv
 torchserve/checkpoints
 **/__pycache__/
 playground
+app/.buildozer
+app/bin
