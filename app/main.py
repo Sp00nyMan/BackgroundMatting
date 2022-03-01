@@ -6,9 +6,6 @@ logger = get_logger(__name__)
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty, BooleanProperty
-from kivy.config import Config
-Config.set('modules', 'monitor', '')
-Config.set('modules', 'showborder', '')
 
 from camera_control import CameraControl
 from model import Model
@@ -16,6 +13,7 @@ from layout import AppLayout
 
 # CODE:
 # TODO: Texture output on Inference. The problem might be due to different values for resolution in camera and camera_control
+# TODO: Keep the resolution after switching to inference mode
 # TODO: Optimize postprocessing time
 
 # Functionality
