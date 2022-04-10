@@ -9,7 +9,7 @@ from kivy.graphics import Fbo, Rectangle
 from kivy.properties import (BooleanProperty, StringProperty, ObjectProperty, OptionProperty, ListProperty)
 from kivy.clock import Clock
 
-from jnius import autoclass, cast, PythonJavaClass, java_method, JavaClass, MetaJavaClass, JavaMethod
+from jnius import autoclass, cast, PythonJavaClass, java_method #, JavaClass, MetaJavaClass, JavaMethod
 
 CameraManager = autoclass("android.hardware.camera2.CameraManager")
 PythonActivity = autoclass("org.kivy.android.PythonActivity")

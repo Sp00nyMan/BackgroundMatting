@@ -19,8 +19,8 @@ class Model:
             self._initialize_local()
 
     def __initialize_online(self):
-        self.url = 'http://matting.northeurope.azurecontainer.io:8080/'
-        #self.url = 'http://192.168.0.160:8080/'
+        # self.url = 'http://matting.northeurope.azurecontainer.io:8080/'
+        self.url = 'http://192.168.0.160:8080/'
         self.prediction_path = 'predictions/matting'
         self.health_path = 'ping'
         self.headers = {'Content-Type':'application/json',

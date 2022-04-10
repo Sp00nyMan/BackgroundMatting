@@ -3,13 +3,13 @@ logger = get_logger(__name__)
 
 from camera import Camera, DeviceCamera
 
-from kivy.clock import Clock
+from kivy.clock import Clock, mainthread
 from kivy.graphics import Rectangle
 from kivy.graphics.texture import Texture
 from kivy.properties import ObjectProperty, ListProperty, BooleanProperty
 from kivy.uix.stencilview import StencilView
 
-class CameraControl(StencilView):
+class DisplayControl(StencilView):
     preview = BooleanProperty(False)
     _texture : Texture = ObjectProperty(None, allownone=True)
     resolution = ListProperty([1920, 1080])
@@ -19,10 +19,6 @@ class CameraControl(StencilView):
     _display_rect : Rectangle = ObjectProperty(None, allownone=True)
     _rect_pos = ListProperty([0, 0])
     _rect_size = ListProperty([1, 1])
-    _tex_coords = ListProperty([0.0, 0.0,   #u      v  (u, v) - position, (w, h) - size
-                                1.0, 0.0,   #u + w  v
-                                1.0, 1.0,   #u + w  v + h
-                                0.0, 1.0])  #u      v + h
 
     camera : Camera = ObjectProperty(None, allownone=True)
 
@@ -30,9 +26,10 @@ class CameraControl(StencilView):
     #####################################
 
     def __init__(self, **kwargs):
-        super(CameraControl, self).__init__(**kwargs)
+        super(DisplayControl, self).__init__(**kwargs)
 
         #self._update_rect will be called if any of these properties change
+        self.pixels = None
         self.bind(pos=self._update_rect,
                   size=self._update_rect,
                   resolution=self._update_rect,
@@ -90,12 +87,19 @@ class CameraControl(StencilView):
 
     #### Correct texture display methods####
     ########################################
-    def display(self, pixels, shape, format="RGB"):
+    def display(self, pixels, shape, format="rgb"):
         if self._texture is None or self._texture.size != shape or self._texture.colorfmt != format:
             self._texture = Texture.create(size=shape, colorfmt=format)
             logger.info(f"Output texture of size {self._texture.size} created")
 
-        self._texture.blit_buffer(pixels)
+        self.pixels = pixels
+        self.__draw()
+
+    @mainthread
+    def __draw(self):
+        if self.pixels:
+            logger.info(f"Texture fmt:{self._texture.colorfmt}")
+            self._texture.blit_buffer(self.pixels, colorfmt='rgb')
 
     def _update_rect(self, *args, fill=True):
         logger.info("Updating output rectangle")
@@ -116,9 +120,15 @@ class CameraControl(StencilView):
 
         self._rect_size = [aspect_width, aspect_height]
 
-        if self._display_rect is None or self._display_rect.tex_coords != self._tex_coords:
-            self._display_rect = Rectangle(texture=self._texture, pos=self._rect_pos, size=self._rect_size,
-                                           tex_coords=self._tex_coords)
+        if self._display_rect is None \
+                or self._display_rect.texture != self._texture \
+                or self._display_rect.tex_coords != tuple(self._tex_coords) \
+                or self._display_rect.pos != tuple(self._rect_pos) \
+                or self._display_rect.size != tuple(self._rect_size):
+
             if self._display_rect in self.canvas.children:
                 self.canvas.remove(self._display_rect)
+
+            self._display_rect = Rectangle(texture=self._texture, pos=self._rect_pos, size=self._rect_size, tex_coords=self._tex_coords)
+
             self.canvas.add(self._display_rect)

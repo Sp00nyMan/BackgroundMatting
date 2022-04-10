@@ -1,7 +1,22 @@
 tmp_folder=/tmp/sp00nyman/bgm
-mkdir $tmp_folder/ -p
-mv .buildozer bin $tmp_folder/ && echo moved buildozer files to $tmp_folder
-rm -r * && echo removed old files
+
+if mkdir $tmp_folder/ -p ; then
+  if mv .buildozer bin $tmp_folder/ && echo moved buildozer files to $tmp_folder ; then
+      rm -r * && echo removed old files
+  else
+      echo "Failed to move buildozer files to $tmp_folder"
+  fi
+else
+  echo "failed to create dir $tmp_folder"
+  exit
+fi
+
 cp /media/sf_Diploma/BackgroundMatting/app/. . -r && echo copied the latests files
-mv $tmp_folder/.buildozer $tmp_folder/bin . && echo restored buildozer files from $tmp_folder
+
+if mv $tmp_folder/.buildozer $tmp_folder/bin . && echo restored buildozer files from $tmp_folder ; then
+  echo "Restored buildozer files"
+else
+  echo "Couldn't restore buildozer files"
+fi
+
 buildozer android debug deploy run logcat
