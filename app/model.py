@@ -1,3 +1,7 @@
+from threading import Thread, Event
+
+from kivy.event import EventDispatcher
+
 from logging_utils import get_logger
 logger = get_logger(__name__)
 
@@ -6,15 +10,38 @@ from time import perf_counter, sleep
 
 from encoder import Encoding
 
-class Model:
+class Model(EventDispatcher):
     MODELS_DIR = 'models'
 
-    def __init__(self, mode='online'):
+    def __init__(self, mode='online', *args, **kwargs):
+        super().__init__(*args, **kwargs)
         assert mode in ['online', 'local']
         self.online = mode == 'online'
         self.initialized = False
+
+        self.register_event_type('on_initialized')
+        self.register_event_type('on_init_failed')
+        self.__init_process : Thread = None
+        self.__init_stop = Event()
+
+
+    def on_initialized(self, *args):
+        pass
+    def on_init_failed(self, *args):
+        pass
+
+    def interrupt_initialization(self):
+        if self.__init_process is not None and  self.__init_process.is_alive():
+            self.__init_stop.set()
+            self.__init_process = None
+            logger.info("Initialization interrupted")
+            self.dispatch("on_init_failed")
+
+
+    def initialize(self):
         if self.online:
-            self.__initialize_online()
+            self.__init_process = Thread(target=self.__initialize_online)
+            self.__init_process.start()
         else:
             self._initialize_local()
 
@@ -27,42 +54,47 @@ class Model:
                         'charset':'utf-8'}
 
         logger.info("Checking servers availability...")
-        max_tries = 5
-        sleep_duration = 5
+        max_tries = 10
+        sleep_duration = 2
         for tries in range(max_tries):
+            if self.__init_stop.is_set():
+                return
             try:
                 response = requests.get(url=self.url + self.health_path, timeout=1)
                 response.raise_for_status()
                 logger.info("Successfully initialized online inference")
                 break
             except Exception as e:
-                logger.error(f"An error occurred while connecting to the server: {e}")
+                logger.debug(f"An error occurred while connecting to the server: {e}")
                 logger.info(f"Retrying in {sleep_duration} seconds [{tries + 1}/{max_tries}]")
                 sleep(sleep_duration)
         else:
+            logger.error("Server unavailable")
+            self.dispatch("on_init_failed")
             raise requests.HTTPError("Server unavailable")
         self.initialized = True
+        self.dispatch('on_initialized')
 
     def _process_online(self, pixels, shape):
         start = perf_counter()
         data = Encoding.json_from_bytes(pixels, shape)
-        logger.info(f"Preprocessing: {perf_counter() - start:.4}")
+        logger.debug(f"Preprocessing: {perf_counter() - start:.4}")
 
         start = perf_counter()
         response = requests.post(url=self.url + self.prediction_path, data=data, headers=self.headers)
         r = response.elapsed.total_seconds()
-        logger.info(f"Request time:{r:.4}")
-        logger.info(f"Additionally elapsed {perf_counter() - start - r:.2} to receive the data")
+        logger.debug(f"Request time:{r:.4}")
+        logger.debug(f"Additionally elapsed {perf_counter() - start - r:.2} to receive the data")
 
         response.raise_for_status()
-        logger.info("Successfully received response from the server")
+        logger.debug("Successfully received response from the server")
 
         start = perf_counter()
 
         data = response.json()
         data = data['predictions'][0]
         data = Encoding.bytes_from_b64(data)
-        logger.info(f"Postprocessing: {perf_counter() - start:.4}")
+        logger.debug(f"Postprocessing: {perf_counter() - start:.4}")
 
         return data
 
@@ -72,6 +104,10 @@ class Model:
             return self._process_online(image, shape)
         else:
             return self._process_local(image)
+
+    def _initialize_local(self):
+        raise NotImplementedError()
+
 
 #TODO: Local inference
 """

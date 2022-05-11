@@ -6,12 +6,24 @@ from kivy.properties import NumericProperty, ListProperty
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
+from kivy.animation import Animation
 
 class ColouredButton(ButtonBehavior, Label):
     background_normal = ListProperty([1, 1, 1, 1])
     background_down = ListProperty([0.5, 0.5, 0.5, 1])
     padding = NumericProperty(dp(2))
     radius = NumericProperty(dp(5))
+
+class MyLabel(Label):
+    _msg_opacity = NumericProperty(0.)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.animation = Animation(_msg_opacity=.9, duration=6., t='out_expo') + Animation(_msg_opacity=0., duration=3., t='linear')
+
+    def write(self, message):
+        self.text = message
+        self.animation.stop(self)
+        self.animation.start(self)
 
 class AppLayout(FloatLayout):
     starting_resolution = "hd"
@@ -25,7 +37,7 @@ class AppLayout(FloatLayout):
 
         from kivy.utils import platform
         if platform != 'android':
-            logger.info("Hiding unused buttons")
+            logger.debug("Hiding unused buttons")
             self.ids.buttons_dropdown.remove_widget(self.ids.button_resolution)
             self.ids.buttons_dropdown.remove_widget(self.ids.button_change)
         self.ids.cdw.preferred_resolution = self.standard_resolutions[self.starting_resolution]

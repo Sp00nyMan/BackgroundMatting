@@ -15,7 +15,7 @@ class CameraCV(Camera):
 
     def close(self):
         self._camera.stop()
-        logger.info("Camera has been closed")
+        logger.debug("Camera has been closed")
 
     def restart(self, *args):
         self.set_best_available_resolution()
@@ -24,7 +24,7 @@ class CameraCV(Camera):
         self._camera.start()
 
     def _camera_opened(self, *args):
-        logger.info("Camera opened")
+        logger.debug("Camera opened")
         self.texture = self._camera.texture
 
         p = (0., 1.)

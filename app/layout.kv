@@ -4,6 +4,17 @@
         Color:
             rgba: 1, 1, 1, 1
 
+<MyLabel>
+    size_hint: 1, None
+
+    canvas.before:
+        Color:
+            rgba: 0, 0, 0, 1
+        RoundedRectangle:
+            pos: self.x + dp(2), self.y + dp(2)
+            size: self.width - 2 * dp(2), self.height - 2 * dp(2)
+            radius: [(dp(5), dp(5))] * 4
+
 <ColouredButton>:
     background_normal: (0.2, 0.2, 0.2, 0.5)
     background_down: (0.3, 0.3, 0.3, 1)
@@ -50,3 +61,12 @@
             id: fps
             font_size: self.height / 2
             text: ""
+    MyLabel:
+        id: msg
+        opacity: self._msg_opacity
+
+        height: dp(50)
+        pos: root.x, 0
+
+        font_size: self.height / 2
+        halign: 'left'

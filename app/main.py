@@ -1,6 +1,4 @@
-import requests
-
-from logging_utils import get_logger
+from logging_utils import get_logger, message_handler
 logger = get_logger(__name__)
 
 from kivy.app import App
@@ -29,6 +27,7 @@ class MattingApp(App):
     def build(self):
         Builder.load_file('layout.kv')
         root = AppLayout()
+        message_handler.setStream(root.ids.msg)
         return root
 
     def update(self, sender, texture):
@@ -40,25 +39,31 @@ class MattingApp(App):
         self.display_control.display(pixels, texture.size)
 
     def toggle_preview(self, toggle=True):
+        if self.model is not None:
+            self.model.interrupt_initialization()
         if toggle:
-            preview = not self.preview
+            self._preview = not self.preview
         else:
-            preview = self.preview
+            self._preview = self.preview
 
-        if not preview:
-            try:
-                self.model = Model()
-            except requests.HTTPError as error:
-                logger.exception("Server cannot be reached...")
-                return
-            self.display_control.bind(on_update=self.update)
+        if not self._preview:
+            self.model = Model()
+            self.model.bind(on_initialized=self.on_model_initialized)
+            self.model.initialize()
         else:
             self.model = None
             self.display_control.unbind(on_update=self.update)
+            self.__restart_display()
 
-        self.preview = preview
+    def on_model_initialized(self, *args):
+        self.display_control.bind(on_update=self.update)
+        self.__restart_display()
+
+    def __restart_display(self):
+        logger.debug("Display restarting")
+        self.preview = self._preview
         self.display_control.preview = self.preview
-        if toggle:
+        if self.preview != self._preview:
             self.display_control.initialize_camera()
 
     def on_start(self):
@@ -66,17 +71,19 @@ class MattingApp(App):
         self.toggle_preview(False)
 
     def on_stop(self): #TODO Correct closing. Sometimes this method is not called
+        if self.model:
+            self.model.interrupt_initialization()
         self.display_control.close()
-        logger.info("Application closed successfully!")
+        logger.debug("Application closed successfully!")
         return super().on_stop()
 
     def on_pause(self):
-        logger.info("Closing camera because of pause")
+        logger.debug("Closing camera because of pause")
         self.display_control.close()
         return super().on_pause()
 
     def on_resume(self):
-        logger.info("Restarting camera owing to resume")
+        logger.debug("Restarting camera owing to resume")
         self.display_control.initialize_camera()
 
 if __name__ == '__main__':

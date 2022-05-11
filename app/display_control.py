@@ -90,7 +90,7 @@ class DisplayControl(StencilView):
     def display(self, pixels, shape, format="rgb"):
         if self._texture is None or self._texture.size != shape or self._texture.colorfmt != format:
             self._texture = Texture.create(size=shape, colorfmt=format)
-            logger.info(f"Output texture of size {self._texture.size} created")
+            logger.debug(f"Output texture of size {self._texture.size} created")
 
         self.pixels = pixels
         self.__draw()
@@ -98,11 +98,11 @@ class DisplayControl(StencilView):
     @mainthread
     def __draw(self):
         if self.pixels:
-            logger.info(f"Texture fmt:{self._texture.colorfmt}")
+            logger.debug(f"Texture fmt:{self._texture.colorfmt}")
             self._texture.blit_buffer(self.pixels, colorfmt='rgb')
 
     def _update_rect(self, *args, fill=True):
-        logger.info("Updating output rectangle")
+        logger.debug("Updating output rectangle")
 
         w, h = self.resolution
         aspect_width = self.width
