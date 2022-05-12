@@ -1,12 +1,9 @@
 from threading import Thread, Event
-
-from kivy.event import EventDispatcher
-
-from logging_utils import get_logger
-logger = get_logger(__name__)
-
 import requests
 from time import perf_counter, sleep
+from logging_utils import get_logger
+logger = get_logger(__name__)
+from kivy.event import EventDispatcher
 
 from encoder import Encoding
 
@@ -37,7 +34,6 @@ class Model(EventDispatcher):
             logger.info("Initialization interrupted")
             self.dispatch("on_init_failed")
 
-
     def initialize(self):
         if self.online:
             self.__init_process = Thread(target=self.__initialize_online)
@@ -54,7 +50,7 @@ class Model(EventDispatcher):
                         'charset':'utf-8'}
 
         logger.info("Checking servers availability...")
-        max_tries = 10
+        max_tries = 3
         sleep_duration = 2
         for tries in range(max_tries):
             if self.__init_stop.is_set():
@@ -69,9 +65,9 @@ class Model(EventDispatcher):
                 logger.info(f"Retrying in {sleep_duration} seconds [{tries + 1}/{max_tries}]")
                 sleep(sleep_duration)
         else:
-            logger.error("Server unavailable")
+            logger.error(f"Unable to reach {self.url}")
             self.dispatch("on_init_failed")
-            raise requests.HTTPError("Server unavailable")
+            return
         self.initialized = True
         self.dispatch('on_initialized')
 

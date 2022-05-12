@@ -38,37 +38,38 @@ class MattingApp(App):
 
         self.display_control.display(pixels, texture.size)
 
-    def toggle_preview(self, toggle=True):
+    def toggle_preview(self):
         if self.model is not None:
             self.model.interrupt_initialization()
-        if toggle:
-            self._preview = not self.preview
-        else:
-            self._preview = self.preview
 
-        if not self._preview:
+        if self.preview:
             self.model = Model()
             self.model.bind(on_initialized=self.on_model_initialized)
             self.model.initialize()
         else:
             self.model = None
             self.display_control.unbind(on_update=self.update)
+            self.preview = True
             self.__restart_display()
 
     def on_model_initialized(self, *args):
-        self.display_control.bind(on_update=self.update)
+        self.preview = False
         self.__restart_display()
+        self.display_control.bind(on_update=self.update)
+
+    def action(self, *args):
+        from encoder import Encoding
+        pixels = self.display_control._texture.pixels
+        Encoding.json_from_bytes(pixels, self.display_control.resolution)
 
     def __restart_display(self):
-        logger.debug("Display restarting")
-        self.preview = self._preview
+        logger.debug("Restarting display")
         self.display_control.preview = self.preview
-        if self.preview != self._preview:
-            self.display_control.initialize_camera()
+        self.display_control.initialize_camera()
 
     def on_start(self):
         self.display_control = self.root.ids.cdw
-        self.toggle_preview(False)
+        self.__restart_display()
 
     def on_stop(self): #TODO Correct closing. Sometimes this method is not called
         if self.model:

@@ -5,7 +5,6 @@ formatter = logging.Formatter("[%(levelname)-8s] %(name)-10s : %(message)s")
 handler.setFormatter(formatter)
 
 message_handler = logging.StreamHandler()
-message_handler.terminator = ''
 message_formatter = logging.Formatter("%(message)s")
 message_handler.setFormatter(message_formatter)
 message_handler.setLevel(logging.INFO)

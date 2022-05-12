@@ -98,19 +98,20 @@ class Camera(EventDispatcher):
 
     def set_best_available_resolution(self, window_size=Window.size) -> None:
         preferred_resolution = tuple(self.preferred_resolution)
-        logger.info(f"Assuming the best resolution is {preferred_resolution}")
+        logger.debug(f"Assuming the best resolution is {preferred_resolution}")
         assert self.supported_resolutions, "List of supported resolutions is empty"
 
         if preferred_resolution in self.supported_resolutions:
-            logger.info(f"Resolution {preferred_resolution} is supported, so setting it")
+            logger.debug(f"Resolution {preferred_resolution} is supported, so setting it")
             self.resolution = preferred_resolution
             return
-        logger.warning(f"Resolution {preferred_resolution} is unsupported. Looking for the best resolution close to the preferred")
+        logger.warning(f"Resolution {preferred_resolution} is unsupported.")
         b = preferred_resolution
         a = b[0] / b[1] # best aspect ratio
         ordered = sorted(self.supported_resolutions, key=lambda r: math.dist(b, r) * abs(a - (r[0]/r[1])))
         logger.debug(f"Supported resolutions ordered by similarity to {preferred_resolution}: {ordered}")
         self.resolution = ordered[0]
+        logger.debug(f"Set {self.resolution} instead of {preferred_resolution}")
 
     def set_suggested_tex_coords(self, p, s):
         """

@@ -18,10 +18,10 @@ class MyLabel(Label):
     _msg_opacity = NumericProperty(0.)
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.animation = Animation(_msg_opacity=.9, duration=6., t='out_expo') + Animation(_msg_opacity=0., duration=3., t='linear')
+        self.animation = Animation(_msg_opacity=.85, duration=6., t='out_expo') + Animation(_msg_opacity=0., duration=3., t='linear')
 
-    def write(self, message):
-        self.text = message
+    def write(self, message:str):
+        self.text = message.strip('\n')
         self.animation.stop(self)
         self.animation.start(self)
 
@@ -34,6 +34,8 @@ class AppLayout(FloatLayout):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self.ids.buttons_dropdown.remove_widget(self.ids.debug_action)
 
         from kivy.utils import platform
         if platform != 'android':

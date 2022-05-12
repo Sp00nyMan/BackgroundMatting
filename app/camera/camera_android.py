@@ -32,9 +32,9 @@ class CameraAndroid(Camera):
         Initialize the list of available cameras.
         Cameras facing FRONT go to the beginning of the list as they have more priority
         """
-        logger.info("Available cameras:")
+        logger.debug("Available cameras:")
         for camera in self.camera_interface.cameras:
-            logger.info(f"Camera ID {camera.camera_id}, facing {camera.facing}, resolutions {camera.supported_resolutions}")
+            logger.debug(f"Camera ID {camera.camera_id}, facing {camera.facing}, resolutions {camera.supported_resolutions}")
             if camera.facing == "BACK":
                 self._available_cameras.append(camera)
             else:
@@ -45,11 +45,11 @@ class CameraAndroid(Camera):
             self._camera.unbind(on_frame=self.update)
             self._camera.close()
             self._camera = None
-            logger.info("Camera closed")
+            logger.debug("Camera closed")
 
     def restart(self, *args):
         self.close()
-        logger.info(f"Restarting the camera. State {self._permission_state}")
+        logger.debug(f"Restarting the camera. State {self._permission_state}")
 
         permitted_states = [PermissionsManager.RequestStates.UNKNOWN,
                             PermissionsManager.RequestStates.HAVE_PERMISSION]
@@ -78,11 +78,11 @@ class CameraAndroid(Camera):
     @mainthread
     def _camera_opened(self, camera, action:str):
         if action != "OPENED":
-            logger.info(f"Camera event {action} is ignored")
+            logger.debug(f"Camera event {action} is ignored")
             return
-        logger.info("Camera opened")
+        logger.debug("Camera opened")
 
-        logger.info("Starting camera preview")
+        logger.debug("Starting camera preview")
         self.texture = self._camera.start_preview(self.resolution)
         if self._camera.facing == "FRONT":
             p = (1., 0.)

@@ -57,6 +57,10 @@
             id: button_resolution
             text: root.starting_resolution.upper()
             on_release: root.change_resolution()
+        ColouredButton:
+            id: debug_action
+            text: "ACTION"
+            on_release: app.action()
         Label:
             id: fps
             font_size: self.height / 2

@@ -137,19 +137,19 @@ class PyCameraDevice(EventDispatcher):
             self.clock_event = None
 
     def _populate_camera_characteristics(self):
-        logger.info("Populating camera characteristics")
+        logger.debug("Populating camera characteristics")
         self.java_stream_configuration_map = self.java_camera_characteristics.get(
             CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-        logger.info("Got stream configuration map")
+        logger.debug("Got stream configuration map")
 
         self.supported_resolutions = [
             (size.getWidth(), size.getHeight()) for size in
             self.java_stream_configuration_map.getOutputSizes(SurfaceTexture(0).getClass())]
-        logger.info("Got supported resolutions")
+        logger.debug("Got supported resolutions")
 
         facing = self.java_camera_characteristics.get(
             CameraCharacteristics.LENS_FACING)
-        logger.info(f"Got facing: {facing}")
+        logger.debug(f"Got facing: {facing}")
         if facing == LensFacing.LENS_FACING_BACK.value:  # CameraCharacteristics.LENS_FACING_BACK:
             self.facing = "BACK"
         elif facing == LensFacing.LENS_FACING_FRONT.value:  # CameraCharacteristics.LENS_FACING_FRONT:
@@ -158,7 +158,7 @@ class PyCameraDevice(EventDispatcher):
             self.facing = "EXTERNAL"
         else:
             raise ValueError("Camera id {} LENS_FACING is unknown value {}".format(self.camera_id, facing))
-        logger.info(f"Finished initing camera {self.camera_id}")
+        logger.debug(f"Finished initing camera {self.camera_id}")
 
     def open(self, callback=None):
         self._open_callback = callback
@@ -174,7 +174,7 @@ class PyCameraDevice(EventDispatcher):
 
         self.java_camera_device = camera_device
 
-        logger.info("CALLBACK: camera event {}".format(action))
+        logger.debug("CALLBACK: camera event {}".format(action))
         if action == "OPENED":
             self.dispatch("on_opened", self)
             self.connected = True
@@ -209,13 +209,13 @@ class PyCameraDevice(EventDispatcher):
         if self.preview_active:
             raise ValueError("Preview already active, can't start again without stopping first")
 
-        logger.info("Creating capture stream with resolution {}".format(resolution))
+        logger.debug("Creating capture stream with resolution {}".format(resolution))
 
         self.preview_resolution = resolution
         self._prepare_preview_fbo(resolution)
         self.preview_texture = Texture(
             width=resolution[0], height=resolution[1], target=GL_TEXTURE_EXTERNAL_OES, colorfmt="rgba")
-        logger.info("Texture id is {}".format(self.preview_texture.id))
+        logger.debug("Texture id is {}".format(self.preview_texture.id))
         self.java_preview_surface_texture = SurfaceTexture(int(self.preview_texture.id))
         self.java_preview_surface_texture.setDefaultBufferSize(*resolution)
         self.java_preview_surface = Surface(self.java_preview_surface_texture)
@@ -266,12 +266,12 @@ class PyCameraDevice(EventDispatcher):
 
     def _java_capture_session_callback(self, *args, **kwargs):
         event = MyCaptureSessionCallback.camera_capture_event.toString()
-        logger.info("CALLBACK: capture event {}".format(event))
+        logger.debug("CALLBACK: capture event {}".format(event))
 
         self.java_capture_session = MyCaptureSessionCallback.camera_capture_session
 
         if event == "READY":
-            logger.info("Doing READY actions")
+            logger.debug("Doing READY actions")
             self.java_capture_session.setRepeatingRequest(self.java_capture_request.build(), None, None)
             self.clock_event = Clock.schedule_interval(self._update_preview, 0) #Saving the event object so we can cancel it
 
@@ -300,25 +300,25 @@ class PyCameraInterface(EventDispatcher):
 
     def __init__(self):
         super().__init__()
-        logger.info("Starting camera interface init")
+        logger.debug("Starting camera interface init")
         self.java_camera_manager = cast("android.hardware.camera2.CameraManager",
                                     context.getSystemService(Context.CAMERA_SERVICE))
 
         self.camera_ids = self.java_camera_manager.getCameraIdList()
         characteristics_dict = self.java_camera_characteristics
         camera_manager = self.java_camera_manager
-        logger.info("Got basic java objects")
+        logger.debug("Got basic java objects")
         for camera_id in self.camera_ids:
-            logger.info(f"Getting data for camera {camera_id}")
+            logger.debug(f"Getting data for camera {camera_id}")
             characteristics_dict[camera_id] = camera_manager.getCameraCharacteristics(camera_id)
-            logger.info("Got characteristics dict")
+            logger.debug("Got characteristics dict")
 
             self.cameras.append(PyCameraDevice(
                 camera_id=camera_id,
                 java_camera_manager=camera_manager,
                 java_camera_characteristics=characteristics_dict[camera_id],
             ))
-            logger.info(f"Finished interpreting camera {camera_id}")
+            logger.debug(f"Finished interpreting camera {camera_id}")
 
     def select_cameras(self, **conditions):
         options = self.cameras

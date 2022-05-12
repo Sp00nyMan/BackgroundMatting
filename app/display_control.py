@@ -19,6 +19,7 @@ class DisplayControl(StencilView):
     _display_rect : Rectangle = ObjectProperty(None, allownone=True)
     _rect_pos = ListProperty([0, 0])
     _rect_size = ListProperty([1, 1])
+    _tex_coords = ListProperty([])
 
     camera : Camera = ObjectProperty(None, allownone=True)
 
@@ -52,7 +53,7 @@ class DisplayControl(StencilView):
         self.camera.bind(on_fps=self.update_fps)
 
         self._tex_coords = self.camera.suggested_tex_coords
-        self._texture = self.camera.texture
+        self._texture = self.camera.texture if self.preview else None
         self.resolution = self.camera.resolution
         self.update_event = Clock.schedule_interval(self.update, 0)
 
@@ -98,8 +99,8 @@ class DisplayControl(StencilView):
     @mainthread
     def __draw(self):
         if self.pixels:
-            logger.debug(f"Texture fmt:{self._texture.colorfmt}")
             self._texture.blit_buffer(self.pixels, colorfmt='rgb')
+            logger.debug("Image drawn")
 
     def _update_rect(self, *args, fill=True):
         logger.debug("Updating output rectangle")
