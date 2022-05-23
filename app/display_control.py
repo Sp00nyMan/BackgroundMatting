@@ -37,7 +37,6 @@ class DisplayControl(StencilView):
                   _texture=self._update_rect)
         self.register_event_type('on_update')
         self.update_event = None
-        self.initialize_camera()
 
     def initialize_camera(self, *args):
         self.close()
@@ -56,12 +55,16 @@ class DisplayControl(StencilView):
         self._texture = self.camera.texture if self.preview else None
         self.resolution = self.camera.resolution
         self.update_event = Clock.schedule_interval(self.update, 0)
+        logger.debug("Camera Update Event scheduled")
 
     def close(self):
         if self.update_event is not None:
             self.update_event.cancel()
         if self.camera is not None:
             self.camera.close()
+            self.camera.unbind(on_update=self.on_frame)
+            self.camera.unbind(on_fps=self.update_fps)
+            self.camera.unbind(on_started=self._start_camera)
             self.camera = None
 
     #### Main functionality ####

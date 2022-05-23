@@ -10,8 +10,9 @@ from model import Model
 from layout import AppLayout
 
 # CODE:
-# TODO: Texture output on Inference. The problem might be due to different values for resolution in camera and display_control
+# TODO: Keep the camera after switching modes
 # TODO: Keep the resolution after switching to inference mode
+# TODO: Texture output on Inference. The problem might be due to different values for resolution in camera and display_control
 # TODO: Optimize postprocessing time
 
 # Functionality
@@ -53,6 +54,7 @@ class MattingApp(App):
             self.__restart_display()
 
     def on_model_initialized(self, *args):
+        logger.debug("Model Initialized")
         self.preview = False
         self.__restart_display()
         self.display_control.bind(on_update=self.update)

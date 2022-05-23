@@ -13,8 +13,8 @@ fi
 
 cp /media/sf_Diploma/BackgroundMatting/app/. . -r && echo copied the latests files
 
-if mv $tmp_folder/.buildozer $tmp_folder/bin . && echo restored buildozer files from $tmp_folder ; then
-  echo "Restored buildozer files"
+if mv $tmp_folder/.buildozer $tmp_folder/bin .; then
+  echo "Restored buildozer files from $tmp_folder"
 else
   echo "Couldn't restore buildozer files"
 fi

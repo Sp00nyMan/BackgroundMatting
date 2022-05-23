@@ -5,3 +5,5 @@ torchserve/checkpoints
 playground
 app/.buildozer
 app/bin
+PRESENTATION VIDEOS/
+*.exe

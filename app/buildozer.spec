@@ -1,19 +1,19 @@
 [app]
 
 # (str) Title of your application
-title = My Application
+title = BackgroundMatting
 
 # (str) Package name
-package.name = myapp
+package.name = backgroundmatting
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = org.test
+package.domain = org.sp00nyman
 
 # (str) Source code where the main.py live
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,kv,png
+source.include_exts = py,kv
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
@@ -28,7 +28,7 @@ source.include_exts = py,kv,png
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.1
+version = 1.0
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]

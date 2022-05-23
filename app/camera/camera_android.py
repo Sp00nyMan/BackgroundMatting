@@ -94,6 +94,7 @@ class CameraAndroid(Camera):
         self.set_suggested_tex_coords(p, s)
 
         self._camera.bind(on_frame=self.update)
+        logger.debug("Camera initialized successfully")
         self.dispatch("on_started")
 
     def change_camera(self):

@@ -39,7 +39,8 @@ class Camera(EventDispatcher):
         self.close()
 
     def update(self, *args):
-        self.texture.ask_update(self.on_tex)
+        self.update_fps()
+        self.dispatch('on_update', self.texture)
 
     def on_update(self, texture):
         """
@@ -66,13 +67,6 @@ class Camera(EventDispatcher):
     def restart(self, *args):
         self.close()
         pass
-
-    def on_tex(self, sender):
-        """
-        Called each time new _texture is received from the camera
-        """
-        self.update_fps()
-        self.dispatch('on_update', self.texture)
 
     def update_fps(self):
         now = perf_counter()
